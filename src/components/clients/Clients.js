@@ -1,26 +1,16 @@
 import React, { Component } from "react";
 import { Link } from "react-router-dom";
+import PropTypes from "prop-types";
+
+import { compose } from "redux";
+import { connect } from "react-redux";
+import { firestoreConnect } from "react-redux-firebase";
+
+import Spinner from "../layout/Spinner";
 
 class Clients extends Component {
   render() {
-    const clients = [
-      {
-        id: "1",
-        firstName: "Kevin",
-        lastName: "Malone",
-        email: "kevin@dundermifflin.com",
-        phone: "867-5309",
-        balance: "100"
-      },
-      {
-        id: "2",
-        firstName: "Creed",
-        lastName: "Bratton",
-        email: "creed@altavista.com",
-        phone: "469-000-0000",
-        balance: "60,000"
-      }
-    ];
+    const { clients } = this.props;
 
     if (clients) {
       return (
@@ -64,9 +54,19 @@ class Clients extends Component {
         </div>
       );
     } else {
-      return <h1>Loading...</h1>;
+      return <Spinner />;
     }
   }
 }
 
-export default Clients;
+Clients.propTypes = {
+  firestore: PropTypes.object.isRequired,
+  clients: PropTypes.array
+};
+
+export default compose(
+  firestoreConnect([{ collection: "clients" }]),
+  connect((state, props) => ({
+    clients: state.firestore.ordered.clients
+  }))
+)(Clients);
