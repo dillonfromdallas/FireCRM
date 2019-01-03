@@ -9,8 +9,72 @@ import classnames from "classnames";
 import Spinner from "../layout/Spinner";
 
 class ClientDetails extends Component {
+  state = {
+    showBalanceUpdate: false,
+    balanceUpdateAmount: 0
+  };
+
+  toggleBalanceMenu = () => {
+    this.setState({ showBalanceUpdate: !this.state.showBalanceUpdate });
+  };
+
+  onChange = e => {
+    this.setState({ [e.target.name]: e.target.value });
+  };
+
+  balanceSubmit = e => {
+    e.preventDefault();
+    const { client, firestore } = this.props;
+    let { balanceUpdateAmount } = this.state;
+
+    const clientUpdate = {
+      balance: parseFloat(balanceUpdateAmount)
+    };
+
+    firestore.update({ collection: "clients", doc: client.id }, clientUpdate);
+  };
+
+  onDeleteClick = () => {
+    const { client, firestore, history } = this.props;
+    firestore
+      .delete({ collection: "clients", doc: client.id })
+      .then(history.push("/"));
+  };
+
   render() {
     const { client } = this.props;
+    const { showBalanceUpdate, balanceUpdateAmount } = this.state;
+
+    let balanceForm = "";
+    if (showBalanceUpdate) {
+      {
+        /* TODO: Fix input displaying Value and not placeholder */
+      }
+      balanceForm = (
+        <form onSubmit={this.balanceSubmit}>
+          <div className="input-group">
+            <input
+              type="text"
+              className="form-control"
+              name="balanceUpdateAmount"
+              placeholder="Add New Balance"
+              value={balanceUpdateAmount}
+              onChange={this.onChange}
+            />
+            <div className="input-group-append">
+              <input
+                type="submit"
+                className="btn btn-outline-dark"
+                value="Update"
+              />
+              {/* TODO: Fix issue where submitting null doesn't default to 0 */}
+            </div>
+          </div>
+        </form>
+      );
+    } else {
+      balanceForm = null;
+    }
 
     if (client) {
       return (
@@ -26,7 +90,9 @@ class ClientDetails extends Component {
                 <Link to={`/client/edit/${client.id}`} className="btn btn-dark">
                   Edit
                 </Link>
-                <button className="btn btn-danger">Delete</button>
+                <button className="btn btn-danger" onClick={this.onDeleteClick}>
+                  Delete
+                </button>
               </div>
             </div>
           </div>
@@ -53,9 +119,14 @@ class ClientDetails extends Component {
                       })}
                     >
                       ${parseFloat(client.balance).toFixed(2)}
-                    </span>
+                    </span>{" "}
+                    <small>
+                      <a href="#" onClick={this.toggleBalanceMenu}>
+                        <i className="fas fa-pencil-alt" />
+                      </a>
+                    </small>
                   </h3>
-                  {/* TODO: Balance Form */}
+                  {balanceForm}
                 </div>
               </div>
               <hr />
